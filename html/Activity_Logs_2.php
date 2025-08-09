@@ -516,19 +516,52 @@ function getTimeAgo($datetime) {
     }
     
     try {
-        $now = new DateTime();
-        $logTime = new DateTime($datetime);
+        // Set timezone to Philippines (adjust if needed)
+        $timezone = new DateTimeZone('Asia/Manila');
+        $now = new DateTime('now', $timezone);
+        $logTime = new DateTime($datetime, $timezone);
+        
+        // Handle future dates
+        if ($now < $logTime) {
+            return "Just now";
+        }
+        
+        // Calculate precise difference
         $diff = $now->diff($logTime);
         
-        if ($diff->days > 0) {
-            return $diff->days == 1 ? "1 day ago" : $diff->days . " days ago";
-        } elseif ($diff->h > 0) {
-            return $diff->h == 1 ? "1 hour ago" : $diff->h . " hours ago";
-        } elseif ($diff->i > 1) {
-            return $diff->i . " minutes ago";
-        } else {
-            return "just now";
+        // Years first (highest priority)
+        if ($diff->y > 0) {
+            return $diff->y == 1 ? "1 year ago" : $diff->y . " years ago";
         }
+        
+        // Months (considers actual month lengths)
+        if ($diff->m > 0) {
+            return $diff->m == 1 ? "1 month ago" : $diff->m . " months ago";
+        }
+        
+        // Days
+        if ($diff->d > 0) {
+            return $diff->d == 1 ? "1 day ago" : $diff->d . " days ago";
+        }
+        
+        // Hours
+        if ($diff->h > 0) {
+            return $diff->h == 1 ? "1 hour ago" : $diff->h . " hours ago";
+        }
+        
+        // Minutes (2 or more)
+        if ($diff->i >= 2) {
+            return $diff->i . " minutes ago";
+        }
+        
+        // Exactly 1 minute
+        if ($diff->i == 1) {
+            return "1 minute ago";
+        }
+        
+        // Less than 1 minute (including seconds)
+        return "Last seen now";
+        
     } catch (Exception $e) {
         return "Unknown";
     }

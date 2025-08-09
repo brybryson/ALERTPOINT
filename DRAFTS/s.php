@@ -1,6 +1,5 @@
 <?php
-
-// ADD THIS AT THE VERY TOP OF Activity_Logs_2.php (before any other PHP code)
+// ADD THIS AT THE VERY TOP OF Activity_Logs.php (before any other PHP code)
 require_once '../javascript/LOGIN/check_session.php';
 
 // Check if user is logged in, if not redirect to login
@@ -26,7 +25,7 @@ require_once '../config/database.php';
 // Add this line after require_once '../config/database.php';
 require_once '../functions/system_action_logger.php';
 
-// Add this after your existing require_once statements
+
 require_once '../vendor/autoload.php';
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -35,15 +34,18 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Font;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 
+
 // Initialize variables with default values
-$systemLogs = [];
-$totalSystemLogs = 0;
-$totalDataExports = 0;
-$totalSystemMaintenance = 0;
-$totalUserManagement = 0;
-$totalOtherActions = 0;
+$adminLogs = [];
+$totalAdminLogs = 0;
+$successfulLogins = 0;
+$failedLogins = 0;
 $pdo = null;
 $currentAdmin = null; // Initialize currentAdmin
+
+// Initialize variables for system action logs
+$systemLogs = [];
+$totalSystemLogs = 0;
 
 // Pagination settings
 $logsPerPage = 10;
@@ -51,7 +53,7 @@ $currentPage = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $offset = ($currentPage - 1) * $logsPerPage;
 
 // Filter settings - Enhanced with date range support
-$filterType = isset($_GET['type']) ? $_GET['type'] : 'all';
+$filterStatus = isset($_GET['status']) ? $_GET['status'] : 'all';
 $filterTimeframe = isset($_GET['timeframe']) ? $_GET['timeframe'] : 'today'; // Changed default to 'today'
 $searchTerm = isset($_GET['search']) ? trim($_GET['search']) : '';
 $startDate = isset($_GET['start_date']) ? $_GET['start_date'] : '';
@@ -70,37 +72,34 @@ try {
         $whereConditions = [];
         $params = [];
         
-        // Action type filter
-        if ($filterType !== 'all') {
-            $whereConditions[] = "sal.action_type = :type";
-            $params[':type'] = $filterType;
+        // Status filter
+        if ($filterStatus !== 'all') {
+            $whereConditions[] = "al.login_status = :status";
+            $params[':status'] = $filterStatus;
         }
         
         // Timeframe filter
         if ($filterTimeframe !== 'all') {
             switch ($filterTimeframe) {
                 case 'today':
-                    $whereConditions[] = "DATE(sal.action_date_time) = CURDATE()";
+                    $whereConditions[] = "DATE(al.login_time) = CURDATE()";
                     break;
                 case 'week':
-                    $whereConditions[] = "sal.action_date_time >= DATE_SUB(NOW(), INTERVAL 7 DAY)";
+                    $whereConditions[] = "al.login_time >= DATE_SUB(NOW(), INTERVAL 7 DAY)";
                     break;
                 case 'month':
-                    $whereConditions[] = "sal.action_date_time >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
-                    break;
-                case 'year':
-                    $whereConditions[] = "sal.action_date_time >= DATE_SUB(NOW(), INTERVAL 1 YEAR)";
+                    $whereConditions[] = "al.login_time >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
                     break;
                 case 'custom':
                     if (!empty($startDate) && !empty($endDate)) {
-                        $whereConditions[] = "DATE(sal.action_date_time) BETWEEN :start_date AND :end_date";
+                        $whereConditions[] = "DATE(al.login_time) BETWEEN :start_date AND :end_date";
                         $params[':start_date'] = $startDate;
                         $params[':end_date'] = $endDate;
                     } elseif (!empty($startDate)) {
-                        $whereConditions[] = "DATE(sal.action_date_time) >= :start_date";
+                        $whereConditions[] = "DATE(al.login_time) >= :start_date";
                         $params[':start_date'] = $startDate;
                     } elseif (!empty($endDate)) {
-                        $whereConditions[] = "DATE(sal.action_date_time) <= :end_date";
+                        $whereConditions[] = "DATE(al.login_time) <= :end_date";
                         $params[':end_date'] = $endDate;
                     }
                     break;
@@ -109,28 +108,28 @@ try {
         
         // Search filter
         if (!empty($searchTerm)) {
-            $whereConditions[] = "(CONCAT(a.first_name, ' ', COALESCE(a.middle_name, ''), ' ', a.last_name) LIKE :search OR a.username LIKE :search OR sal.admin_id LIKE :search OR sal.action_summary LIKE :search OR sal.action_details LIKE :search)";
+            $whereConditions[] = "(CONCAT(a.first_name, ' ', COALESCE(a.middle_name, ''), ' ', a.last_name) LIKE :search OR a.username LIKE :search OR al.admin_id LIKE :search)";
             $params[':search'] = '%' . $searchTerm . '%';
         }
         
         $whereClause = !empty($whereConditions) ? 'WHERE ' . implode(' AND ', $whereConditions) : '';
         
         // Count total logs for pagination
-        $countQuery = "SELECT COUNT(*) as total FROM system_action_logs sal 
-                       LEFT JOIN admins_tbl a ON sal.admin_id = a.admin_id 
+        $countQuery = "SELECT COUNT(*) as total FROM admin_logs al 
+                       LEFT JOIN admins_tbl a ON al.admin_id = a.admin_id 
                        $whereClause";
         $countStmt = $pdo->prepare($countQuery);
         $countStmt->execute($params);
-        $totalSystemLogs = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
+        $totalAdminLogs = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
         
-        // Fetch system action logs with pagination
-        $query = "SELECT sal.*, 
+        // Fetch admin logs with pagination
+        $query = "SELECT al.*, 
                          a.first_name, a.middle_name, a.last_name, a.username, a.picture,
                          a.barangay_position
-                  FROM system_action_logs sal 
-                  LEFT JOIN admins_tbl a ON sal.admin_id = a.admin_id 
+                  FROM admin_logs al 
+                  LEFT JOIN admins_tbl a ON al.admin_id = a.admin_id 
                   $whereClause
-                  ORDER BY sal.action_date_time DESC 
+                  ORDER BY al.login_time DESC 
                   LIMIT :limit OFFSET :offset";
         
         $stmt = $pdo->prepare($query);
@@ -145,67 +144,142 @@ try {
         }
         
         $stmt->execute();
-        $systemLogs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $adminLogs = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         // Get statistics
         $statsWhereClause = $whereClause; // Use same WHERE clause as main query
         $statsQuery = "SELECT 
-                COUNT(*) as total,
-                SUM(CASE WHEN action_type = 'data_export' THEN 1 ELSE 0 END) as data_exports,
-                SUM(CASE WHEN action_type = 'system_maintenance' THEN 1 ELSE 0 END) as system_maintenance,
-                SUM(CASE WHEN action_type = 'admin_management' THEN 1 ELSE 0 END) as user_management,
-                SUM(CASE WHEN action_type NOT IN ('data_export', 'system_maintenance', 'admin_management') THEN 1 ELSE 0 END) as other_actions
-            FROM system_action_logs sal 
-            LEFT JOIN admins_tbl a ON sal.admin_id = a.admin_id 
-            $statsWhereClause";
+                        COUNT(*) as total,
+                        SUM(CASE WHEN login_status = 'success' THEN 1 ELSE 0 END) as successful,
+                        SUM(CASE WHEN login_status = 'failed' THEN 1 ELSE 0 END) as failed
+                    FROM admin_logs al 
+                    LEFT JOIN admins_tbl a ON al.admin_id = a.admin_id 
+                    $statsWhereClause";
         $statsStmt = $pdo->prepare($statsQuery);
         $statsStmt->execute($params); // Use same params as main query
         $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
 
-        $totalSystemLogsAll = $stats['total'];
-        $totalDataExports = $stats['data_exports'];
-        $totalSystemMaintenance = $stats['system_maintenance'];
-        $totalUserManagement = $stats['user_management'];
-        $totalOtherActions = $stats['other_actions'];
-        
-    }
-} catch (Exception $e) {
-    // Log error and use fallback values
-    error_log("Database error in Activity_Logs_2.php: " . $e->getMessage());
-    $systemLogs = [];
-    $totalSystemLogs = 0;
-    $totalDataExports = 0;
-    $totalSystemMaintenance = 0;
-    $totalUserManagement = 0;
-    $totalOtherActions = 0;
-    $pdo = null;
-}
+        $totalAdminLogsAll = $stats['total'];
+        $successfulLogins = $stats['successful'];
+        $failedLogins = $stats['failed'];
 
-if (isset($_GET['export']) && $_GET['export'] === 'excel') {
-    // Apply filters to Excel export query
-    try {
-        if ($pdo) {
-            // Use the same query logic for export but without LIMIT
-            $exportQuery = "SELECT sal.*, 
+        // FIXED: Fetch system action logs with proper WHERE clause for system_action_logs table
+        try {
+            // Build WHERE clause for system action logs (different field names)
+            $systemWhereConditions = [];
+            $systemParams = [];
+            
+            // Timeframe filter for system logs
+            if ($filterTimeframe !== 'all') {
+                switch ($filterTimeframe) {
+                    case 'today':
+                        $systemWhereConditions[] = "DATE(sal.action_date_time) = CURDATE()";
+                        break;
+                    case 'week':
+                        $systemWhereConditions[] = "sal.action_date_time >= DATE_SUB(NOW(), INTERVAL 7 DAY)";
+                        break;
+                    case 'month':
+                        $systemWhereConditions[] = "sal.action_date_time >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
+                        break;
+                    case 'custom':
+                        if (!empty($startDate) && !empty($endDate)) {
+                            $systemWhereConditions[] = "DATE(sal.action_date_time) BETWEEN :start_date AND :end_date";
+                            $systemParams[':start_date'] = $startDate;
+                            $systemParams[':end_date'] = $endDate;
+                        } elseif (!empty($startDate)) {
+                            $systemWhereConditions[] = "DATE(sal.action_date_time) >= :start_date";
+                            $systemParams[':start_date'] = $startDate;
+                        } elseif (!empty($endDate)) {
+                            $systemWhereConditions[] = "DATE(sal.action_date_time) <= :end_date";
+                            $systemParams[':end_date'] = $endDate;
+                        }
+                        break;
+                }
+            }
+            
+            // Search filter for system logs
+            if (!empty($searchTerm)) {
+                $systemWhereConditions[] = "(CONCAT(a.first_name, ' ', COALESCE(a.middle_name, ''), ' ', a.last_name) LIKE :search OR a.username LIKE :search OR sal.admin_id LIKE :search)";
+                $systemParams[':search'] = '%' . $searchTerm . '%';
+            }
+            
+            $systemWhereClause = !empty($systemWhereConditions) ? 'WHERE ' . implode(' AND ', $systemWhereConditions) : '';
+            
+            // Fetch system action logs with pagination
+            $systemQuery = "SELECT sal.*, 
                                    a.first_name, a.middle_name, a.last_name, a.username, a.picture,
                                    a.barangay_position
                             FROM system_action_logs sal 
                             LEFT JOIN admins_tbl a ON sal.admin_id = a.admin_id 
+                            $systemWhereClause
+                            ORDER BY sal.action_date_time DESC 
+                            LIMIT :limit OFFSET :offset";
+            
+            $systemStmt = $pdo->prepare($systemQuery);
+            $systemStmt->bindValue(':limit', $logsPerPage, PDO::PARAM_INT);
+            $systemStmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+            
+            foreach ($systemParams as $key => $value) {
+                $systemStmt->bindValue($key, $value);
+            }
+            
+            $systemStmt->execute();
+            $systemLogs = $systemStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Count system logs
+            $systemCountQuery = "SELECT COUNT(*) as total FROM system_action_logs sal 
+                                LEFT JOIN admins_tbl a ON sal.admin_id = a.admin_id 
+                                $systemWhereClause";
+            $systemCountStmt = $pdo->prepare($systemCountQuery);
+            foreach ($systemParams as $key => $value) {
+                $systemCountStmt->bindValue($key, $value);
+            }
+            $systemCountStmt->execute();
+            $totalSystemLogs = $systemCountStmt->fetch(PDO::FETCH_ASSOC)['total'];
+            
+        } catch (Exception $e) {
+            // If system logs fail, just use empty arrays
+            $systemLogs = [];
+            $totalSystemLogs = 0;
+            error_log("System logs error: " . $e->getMessage());
+        }
+    }
+} catch (Exception $e) {
+    // Log error and use fallback values
+    error_log("Database error in Activity_Logs.php: " . $e->getMessage());
+    $adminLogs = [];
+    $totalAdminLogs = 0;
+    $successfulLogins = 0;
+    $failedLogins = 0;
+    $pdo = null;
+}
+
+
+if (isset($_GET['export']) && $_GET['export'] === 'csv') {
+    // Apply filters to Excel export query
+    try {
+        if ($pdo) {
+            // Use the same query logic for export but without LIMIT
+            $exportQuery = "SELECT al.*, 
+                                   a.first_name, a.middle_name, a.last_name, a.username, a.picture,
+                                   a.barangay_position
+                            FROM admin_logs al 
+                            LEFT JOIN admins_tbl a ON al.admin_id = a.admin_id 
                             $whereClause
-                            ORDER BY sal.action_date_time DESC";
+                            ORDER BY al.login_time DESC";
             
             $exportStmt = $pdo->prepare($exportQuery);
             foreach ($params as $key => $value) {
                 $exportStmt->bindValue($key, $value);
             }
             $exportStmt->execute();
-            $systemLogsForExport = $exportStmt->fetchAll(PDO::FETCH_ASSOC);
+            $adminLogsForExport = $exportStmt->fetchAll(PDO::FETCH_ASSOC);
             
             // LOG THE EXPORT ACTION
             if ($currentAdmin && isset($currentAdmin['admin_id'])) {
                 $exportFilters = [
                     'timeframe' => $filterTimeframe,
-                    'type' => $filterType,
+                    'status' => $filterStatus,
                     'search' => $searchTerm,
                     'start_date' => $startDate,
                     'end_date' => $endDate
@@ -220,10 +294,10 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
                     $logStmt->execute([
                         ':admin_id' => $currentAdmin['admin_id'],
                         ':action_type' => 'data_export',
-                        ':action_summary' => 'Exported system action logs',
-                        ':action_details' => "Exported " . count($systemLogsForExport) . " system action log entries with filters: " . $filterDetails,
+                        ':action_summary' => 'Exported admin login logs',
+                        ':action_details' => "Exported " . count($adminLogsForExport) . " admin login log entries with filters: " . $filterDetails,
                         ':target_type' => 'data',
-                        ':target_name' => 'system_action_logs',
+                        ':target_name' => 'admin_login_logs',
                         ':ip_address' => $_SERVER['REMOTE_ADDR'] ?? '',
                         ':user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? ''
                     ]);
@@ -232,10 +306,10 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
                 }
             }
         } else {
-            $systemLogsForExport = [];
+            $adminLogsForExport = [];
         }
     } catch (Exception $e) {
-        $systemLogsForExport = [];
+        $adminLogsForExport = [];
     }
 
     // Create new Spreadsheet
@@ -284,10 +358,10 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
         }
     }
     
-    // Add action type filter info if applied
-    $typeFilterInfo = '';
-    if ($filterType !== 'all') {
-        $typeFilterInfo = ' (Type: ' . ucfirst(str_replace('_', ' ', $filterType)) . ')';
+    // Add status filter info if applied
+    $statusFilterInfo = '';
+    if ($filterStatus !== 'all') {
+        $statusFilterInfo = ' (Status: ' . ucfirst($filterStatus) . ')';
     }
     
     // Add search filter info if applied
@@ -299,7 +373,7 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
     $currentRow = 1;
     
     // Add header information
-    $sheet->setCellValue('A' . $currentRow, 'SYSTEM ACTION LOGS STATISTICS');
+    $sheet->setCellValue('A' . $currentRow, 'ADMIN LOGIN LOGS STATISTICS');
     $sheet->getStyle('A' . $currentRow)->getFont()->setBold(true)->setSize(16);
     $currentRow += 2;
     
@@ -310,32 +384,28 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
     $sheet->setCellValue('A' . $currentRow, 'Report Generated: ' . $reportDate);
     $currentRow++;
     
-    $sheet->setCellValue('A' . $currentRow, 'Filter Period: ' . $filterDescription . $typeFilterInfo . $searchFilterInfo);
+    $sheet->setCellValue('A' . $currentRow, 'Filter Period: ' . $filterDescription . $statusFilterInfo . $searchFilterInfo);
     $currentRow += 2;
     
     // Add statistics
-    $sheet->setCellValue('A' . $currentRow, 'Total System Actions');
-    $sheet->setCellValue('B' . $currentRow, $totalSystemLogsAll);
+    $sheet->setCellValue('A' . $currentRow, 'Total Login Attempts');
+    $sheet->setCellValue('B' . $currentRow, $totalAdminLogsAll);
     $currentRow++;
     
-    $sheet->setCellValue('A' . $currentRow, 'Data Exports');
-    $sheet->setCellValue('B' . $currentRow, $totalDataExports);
+    $sheet->setCellValue('A' . $currentRow, 'Successful Logins');
+    $sheet->setCellValue('B' . $currentRow, $successfulLogins);
     $currentRow++;
     
-    $sheet->setCellValue('A' . $currentRow, 'System Maintenance');
-    $sheet->setCellValue('B' . $currentRow, $totalSystemMaintenance);
+    $sheet->setCellValue('A' . $currentRow, 'Failed Attempts');
+    $sheet->setCellValue('B' . $currentRow, $failedLogins);
     $currentRow++;
     
-    $sheet->setCellValue('A' . $currentRow, 'User Management');
-    $sheet->setCellValue('B' . $currentRow, $totalUserManagement);
-    $currentRow++;
-    
-    $sheet->setCellValue('A' . $currentRow, 'Other Actions');
-    $sheet->setCellValue('B' . $currentRow, $totalOtherActions);
+    $sheet->setCellValue('A' . $currentRow, 'Success Rate');
+    $sheet->setCellValue('B' . $currentRow, ($totalAdminLogsAll > 0 ? round(($successfulLogins / $totalAdminLogsAll) * 100, 1) : 0) . '%');
     $currentRow += 3;
     
     // Add table header
-    $sheet->setCellValue('A' . $currentRow, 'DETAILED SYSTEM ACTION LOGS');
+    $sheet->setCellValue('A' . $currentRow, 'DETAILED ADMIN LOGIN LOGS');
     $sheet->getStyle('A' . $currentRow)->getFont()->setBold(true)->setSize(14);
     $currentRow++;
     
@@ -345,9 +415,9 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
         'B' => ['title' => 'Username', 'width' => 15],
         'C' => ['title' => 'Position', 'width' => 30],
         'D' => ['title' => 'Admin ID', 'width' => 12],
-        'E' => ['title' => 'Date Done', 'width' => 25],
-        'F' => ['title' => 'Action Type', 'width' => 18],
-        'G' => ['title' => 'Details', 'width' => 80],
+        'E' => ['title' => 'Login Time', 'width' => 25],
+        'F' => ['title' => 'Previous Session', 'width' => 25],
+        'G' => ['title' => 'Status', 'width' => 12],
         'H' => ['title' => 'Browser', 'width' => 12],
         'I' => ['title' => 'Operating System', 'width' => 15],
         'J' => ['title' => 'User Agent', 'width' => 100]
@@ -378,7 +448,7 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
     $currentRow++;
     
     // Add data rows
-    foreach ($systemLogsForExport as $log) {
+    foreach ($adminLogsForExport as $log) {
         $fullName = getFullName($log['first_name'] ?? '', $log['middle_name'] ?? '', $log['last_name'] ?? '');
         $browser = getBrowserName($log['user_agent'] ?? '');
         $os = getOSName($log['user_agent'] ?? '');
@@ -387,9 +457,9 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
         $sheet->setCellValue('B' . $currentRow, $log['username'] ?? 'N/A');
         $sheet->setCellValue('C' . $currentRow, $log['barangay_position'] ?? 'Admin');
         $sheet->setCellValue('D' . $currentRow, $log['admin_id'] ?? 'N/A');
-        $sheet->setCellValue('E' . $currentRow, formatDateTime($log['action_date_time']));
-        $sheet->setCellValue('F' . $currentRow, ucfirst(str_replace('_', ' ', $log['action_type'] ?? '')));
-        $sheet->setCellValue('G' . $currentRow, $log['action_details'] ?? '');
+        $sheet->setCellValue('E' . $currentRow, formatDateTime($log['login_time']));
+        $sheet->setCellValue('F' . $currentRow, formatDateTime($log['previous_last_active']));
+        $sheet->setCellValue('G' . $currentRow, ucfirst($log['login_status'] ?? ''));
         $sheet->setCellValue('H' . $currentRow, $browser);
         $sheet->setCellValue('I' . $currentRow, $os);
         $sheet->setCellValue('J' . $currentRow, $log['user_agent'] ?? '');
@@ -405,13 +475,8 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
         $currentRow++;
     }
     
-    // Auto-size columns for better fit (optional, you can remove this if you want exact widths)
-    // foreach (array_keys($headers) as $column) {
-    //     $sheet->getColumnDimension($column)->setAutoSize(true);
-    // }
-    
     // Generate filename with filter info
-    $filename = 'system_action_logs_';
+    $filename = 'admin_logs_';
     
     if ($filterTimeframe === 'today') {
         $filename .= 'today_';
@@ -450,13 +515,13 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
 if (isset($_POST['clear_old_logs']) && $_POST['clear_old_logs'] === 'confirm') {
     try {
         if ($pdo) {
-            // Delete logs older than 2 years
-            $clearQuery = "DELETE FROM system_action_logs WHERE action_date_time < DATE_SUB(NOW(), INTERVAL 2 YEAR)";
+            // Delete logs older than 90 days
+            $clearQuery = "DELETE FROM admin_logs WHERE login_time < DATE_SUB(NOW(), INTERVAL 90 DAY)";
             $clearStmt = $pdo->prepare($clearQuery);
             $clearStmt->execute();
             
             $deletedCount = $clearStmt->rowCount();
-            $clearMessage = "Successfully cleared $deletedCount old system action log entries (older than 2 years).";
+            $clearMessage = "Successfully cleared $deletedCount old log entries (older than 90 days).";
             
             // LOG THE CLEAR ACTION to system_action_logs
             if ($currentAdmin && isset($currentAdmin['admin_id']) && $deletedCount > 0) {
@@ -467,10 +532,10 @@ if (isset($_POST['clear_old_logs']) && $_POST['clear_old_logs'] === 'confirm') {
                     $logStmt->execute([
                         ':admin_id' => $currentAdmin['admin_id'],
                         ':action_type' => 'system_maintenance',
-                        ':action_summary' => 'Cleared old system action logs',
-                        ':action_details' => "Cleared $deletedCount system action log entries older than 2 years",
+                        ':action_summary' => 'Cleared old admin login logs',
+                        ':action_details' => "Cleared $deletedCount admin login log entries older than 90 days",
                         ':target_type' => 'system',
-                        ':target_name' => 'system_action_logs',
+                        ':target_name' => 'admin_login_logs',
                         ':ip_address' => $_SERVER['REMOTE_ADDR'] ?? '',
                         ':user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? ''
                     ]);
@@ -494,7 +559,7 @@ if (isset($_GET['cleared'])) {
 }
 
 // Calculate pagination
-$totalPages = ceil($totalSystemLogs / $logsPerPage);
+$totalPages = ceil($totalAdminLogs / $logsPerPage);
 
 // Helper functions
 function formatDateTime($datetime) {
@@ -616,137 +681,6 @@ function getCurrentServerDate() {
 }
 ?>
 
-    <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div class="stat-card hover-card rounded-lg p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600">Total System Actions</p>
-                        <p class="text-2xl font-bold text-gray-900"><?php echo $totalSystemLogsAll; ?></p>
-                        <?php if ($filterTimeframe !== 'all'): ?>
-                            <p class="text-xs text-gray-500 mt-1">
-                                <?php 
-                                switch($filterTimeframe) {
-                                    case 'today': echo 'For Today'; break;
-                                    case 'week': echo 'This Week'; break;
-                                    case 'month': echo 'This Month'; break;
-                                    case 'year': echo 'This Year'; break;
-                                    case 'custom': 
-                                        if (!empty($startDate) && !empty($endDate)) {
-                                            echo date('M j', strtotime($startDate)) . ' - ' . date('M j, Y', strtotime($endDate));
-                                        } elseif (!empty($startDate)) {
-                                            echo 'From ' . date('M j, Y', strtotime($startDate));
-                                        } elseif (!empty($endDate)) {
-                                            echo 'Until ' . date('M j, Y', strtotime($endDate));
-                                        }
-                                        break;
-                                }
-                                ?>
-                            </p>
-                        <?php endif; ?>
-                    </div>
-                    <div class="p-3">
-                        <i class="fas fa-cogs text-blue-600 text-3xl"></i>
-                    </div>
-                </div>
-            </div>
 
-            <div class="stat-card hover-card rounded-lg p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600">Data Exports</p>
-                        <p class="text-2xl font-bold text-green-600"><?php echo $totalDataExports; ?></p>
-                        <?php if ($filterTimeframe !== 'all'): ?>
-                            <p class="text-xs text-gray-500 mt-1">
-                                <?php 
-                                switch($filterTimeframe) {
-                                    case 'today': echo 'For Today'; break;
-                                    case 'week': echo 'This Week'; break;
-                                    case 'month': echo 'This Month'; break;
-                                    case 'year': echo 'This Year'; break;
-                                    case 'custom': 
-                                        if (!empty($startDate) && !empty($endDate)) {
-                                            echo date('M j', strtotime($startDate)) . ' - ' . date('M j, Y', strtotime($endDate));
-                                        } elseif (!empty($startDate)) {
-                                            echo 'From ' . date('M j, Y', strtotime($startDate));
-                                        } elseif (!empty($endDate)) {
-                                            echo 'Until ' . date('M j, Y', strtotime($endDate));
-                                        }
-                                        break;
-                                }
-                                ?>
-                            </p>
-                        <?php endif; ?>
-                    </div>
-                    <div class="p-3">
-                        <i class="fas fa-download text-green-600 text-3xl"></i>
-                    </div>
-                </div>
-            </div>
 
-            <div class="stat-card hover-card rounded-lg p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600">System Maintenance</p>
-                        <p class="text-2xl font-bold text-orange-600"><?php echo $totalSystemMaintenance; ?></p>
-                        <?php if ($filterTimeframe !== 'all'): ?>
-                            <p class="text-xs text-gray-500 mt-1">
-                                <?php 
-                                switch($filterTimeframe) {
-                                    case 'today': echo 'For Today'; break;
-                                    case 'week': echo 'This Week'; break;
-                                    case 'month': echo 'This Month'; break;
-                                    case 'year': echo 'This Year'; break;
-                                    case 'custom': 
-                                        if (!empty($startDate) && !empty($endDate)) {
-                                            echo date('M j', strtotime($startDate)) . ' - ' . date('M j, Y', strtotime($endDate));
-                                        } elseif (!empty($startDate)) {
-                                            echo 'From ' . date('M j, Y', strtotime($startDate));
-                                        } elseif (!empty($endDate)) {
-                                            echo 'Until ' . date('M j, Y', strtotime($endDate));
-                                        }
-                                        break;
-                                }
-                                ?>
-                            </p>
-                        <?php endif; ?>
-                    </div>
-                    <div class="p-3">
-                        <i class="fas fa-tools text-orange-600 text-3xl"></i>
-                    </div>
-                </div>
-            </div>
 
-            <div class="stat-card hover-card rounded-lg p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600">User Management</p>
-                        <p class="text-2xl font-bold text-purple-600"><?php echo $totalUserManagement; ?></p>
-                        <?php if ($filterTimeframe !== 'all'): ?>
-                            <p class="text-xs text-gray-500 mt-1">
-                                <?php 
-                                switch($filterTimeframe) {
-                                    case 'today': echo 'For Today'; break;
-                                    case 'week': echo 'This Week'; break;
-                                    case 'month': echo 'This Month'; break;
-                                    case 'year': echo 'This Year'; break;
-                                    case 'custom': 
-                                        if (!empty($startDate) && !empty($endDate)) {
-                                            echo date('M j', strtotime($startDate)) . ' - ' . date('M j, Y', strtotime($endDate));
-                                        } elseif (!empty($startDate)) {
-                                            echo 'From ' . date('M j, Y', strtotime($startDate));
-                                        } elseif (!empty($endDate)) {
-                                            echo 'Until ' . date('M j, Y', strtotime($endDate));
-                                        }
-                                        break;
-                                }
-                                ?>
-                            </p>
-                        <?php endif; ?>
-                    </div>
-                    <div class="p-3">
-                        <i class="fas fa-users-cog text-purple-600 text-3xl"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
