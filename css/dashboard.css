@@ -1,0 +1,321 @@
+ /* Smooth transition for nav-tab hover border and text color */
+        .nav-tab {
+            border-color: transparent;
+            color: #374151; /* gray-700 */
+            transition: all 0.3s ease-in-out;
+        }
+
+        .nav-tab:hover {
+            border-bottom-color: #2563eb; /* blue-600 */
+            color: #2563eb;
+        }
+
+        .nav-tab.active {
+            border-bottom-color: #2563eb; /* initial active tab */
+            color: #2563eb;
+        }
+
+        /* Hover effect for stat cards */
+        .hover-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .hover-card:hover {
+            transform: scale(1.03);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        .map-container {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            position: relative;
+            height: 384px;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        .sensor-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            position: absolute;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .sensor-label {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+        .road {
+            background: rgba(107, 114, 128, 0.5);
+            position: absolute;
+        }
+        .ai-response {
+            background: #f3f4f6;
+            border-left: 4px solid #8b5cf6;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            display: none;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+        }
+
+        /* CHARTS */
+        .gauge-container {
+            position: relative;
+            width: 200px;
+            height: auto;
+            margin: 0 auto;
+        }
+        .gauge-value {
+            text-align: center;
+            font-weight: bold;
+        }
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+        .gauge-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            justify-items: center;
+        }
+
+        /* Responsive Modern Gauge */
+        .modern-gauge {
+            position: relative;
+            width: 100%;
+            max-width: 280px;
+            aspect-ratio: 1;
+            margin: 0 auto;
+            background: linear-gradient(145deg, #f8fafc, #e2e8f0);
+            border-radius: 50%;
+            box-shadow: 
+                8px 8px 16px #d1d9e6,
+                -8px -8px 16px #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .gauge-inner {
+            width: 95%;
+            height: 95%;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #ffffff, #f1f5f9);
+            box-shadow: 
+                inset 10px 10px 25px #d1d9e6,
+                inset -15px -15px 16px #ffffff;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        /* .gauge-progress {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120%;
+            height: 150%;
+            max-width: 300px;
+            max-height: 300px;
+        } */
+
+        /* Replace your existing .gauge-progress rule with this: */
+
+        .gauge-progress {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120%;
+            height: 150%;
+            /* Removed max-width and max-height constraints that were causing the issue */
+        }
+
+        
+
+        .gauge-text {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .gauge-value {
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 0.25rem;
+        }
+
+        .gauge-label {
+            font-size: clamp(0.75rem, 2vw, 0.875rem);
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .gauge-icon {
+            position: absolute;
+            top: 8%;
+            right: 5%;
+            width: clamp(36px, 7vw, 48px);         /* Was 28-36px → now 36-48px */
+            height: clamp(36px, 7vw, 48px); 
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(1rem, 3vw, 1.25rem);
+            color: white;
+            z-index: 10;
+        }
+
+        .chart-container {
+            height: 320px;
+            position: relative;
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .metric-card {
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            border-radius: 16px;
+            padding: 1rem;
+            box-shadow: 
+                8px 8px 20px rgba(0,0,0,0.1),
+                -8px -8px 20px rgba(255,255,255,0.8);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                12px 12px 30px rgba(0,0,0,0.15),
+                -12px -12px 30px rgba(255,255,255,0.9);
+        }
+
+        .status-indicator {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse-indicator 2s infinite;
+        }
+
+        @keyframes pulse-indicator {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .humidity-dot {
+            background-color:#4ecdc4;
+        }
+        .temp-gradient { background: linear-gradient(135deg, #ff6b6b, #ffa726); }
+        .humidity-gradient { background: linear-gradient(135deg, #4ecdc4, #26d0ce); }
+        .water-gradient { background: linear-gradient(135deg, #3b82f6, #1e40af); }
+
+        .metric-section {
+            margin-bottom: 3rem;
+        }
+
+        .section-header {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .section-title {
+            font-size: 1.875rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #1f2937, #4b5563);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .ai-banner {
+            background: rgba(255, 248, 220, 0.8);
+            border-left: 4px solid #f59e0b;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .metric-card {
+                min-height: 350px;
+                padding: 1rem;
+            }
+            
+            .gauge-value {
+                font-size: 2rem;
+            }
+            
+            .gauge-label {
+                font-size: 0.75rem;
+            }
+            
+            .modern-gauge {
+                max-width: 240px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .metric-card {
+                min-height: 450px;
+            }
+        }
+
+        

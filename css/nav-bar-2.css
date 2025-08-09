@@ -1,0 +1,27 @@
+    .nav-tab {
+            border-color: transparent;
+            color: #374151; /* gray-700 */
+            transition: all 0.3s ease-in-out;
+        }
+
+         /* blue-600 
+        .nav-tab:hover {
+            border-bottom-color: #2563eb; 
+            color: #2563eb;
+        }
+
+        .nav-tab.active {
+            border-bottom-color: #2563eb; 
+            color: #2563eb;
+        } */
+
+
+        .nav-tab:hover {
+            border-bottom-color: #dc2626 !important; /* red-600 */
+            color: #dc2626 !important;
+        }
+
+        .nav-tab.active {
+            border-bottom-color: #dc2626 !important; /* initial active tab */
+            color: #dc2626 !important;
+        }

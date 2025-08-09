@@ -1,0 +1,24 @@
+# Basic .htaccess for AlertPoint
+# Remove problematic directives that might cause 500 errors
+
+# Allow access to uploads directory
+<Files "*.jpg">
+    Allow from all
+</Files>
+
+<Files "*.jpeg">
+    Allow from all
+</Files>
+
+<Files "*.png">
+    Allow from all
+</Files>
+
+# Protect sensitive files
+<Files "*.sql">
+    Deny from all
+</Files>
+
+<Files "*.log">
+    Deny from all
+</Files>

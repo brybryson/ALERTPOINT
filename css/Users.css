@@ -1,0 +1,584 @@
+ .status-online { 
+            background: #10b981; 
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+        .status-offline { 
+            background: #ef4444; 
+        }
+        .user-card {
+            transition: all 0.3s ease;
+            border: 1px solid #e5e7eb;
+        }
+        .user-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border-color: #3b82f6;
+        }
+        /* Smarter filter-tab styling for tighter UI */
+        /* Shadow match with dashboard cards */
+        .shadow-md {
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .filter-tab {
+            transition: all 0.3s ease;
+            background-color: #f1f5f9;
+            color: #374151;
+        }
+
+        .filter-tab:hover {
+            background-color: #e5e7eb;
+        }
+
+        .filter-tab.active {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
+        }
+
+        .archived-section {
+            background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+            border-left: 4px solid #ef4444;
+        }
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        .action-btn {
+            transition: all 0.2s ease;
+        }
+        .action-btn:hover {
+            transform: scale(1.05);
+        }
+        /* Match dashboard-style inputs */
+        .search-input {
+            background: white;
+            border: 1px solid #d1d5db;
+            transition: all 0.3s ease;
+            font-size: 0.875rem;
+        }
+
+        .search-input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+        }
+
+        /* Match dashboard.html card behavior */
+        .stat-card {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Hover effect from dashboard.html */
+        .hover-card:hover {
+            transform: scale(1.03);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+
+     
+       /* Animations */
+        @keyframes fade-in-up {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in-up {
+            animation: fade-in-up 0.3s ease-out;
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.2s ease-out forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .animate-shake {
+            animation: shake 0.3s ease-in-out;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(-3px); }
+        }
+
+      /* ADD ADMIN */
+
+       .profile-image-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+        }
+        .profile-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #e5e7eb;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .profile-image:hover {
+            border-color: #3b82f6;
+            transform: scale(1.05);
+        }
+        .image-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            cursor: pointer;
+        }
+        .profile-image-container:hover .image-overlay {
+            opacity: 1;
+        }
+        .upload-placeholder {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 2px dashed #d1d5db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f9fafb;
+        }
+        .upload-placeholder:hover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-shake {
+            animation: shake 0.3s ease-in-out;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+
+
+
+
+
+
+
+
+        /* Add this CSS to your existing styles */
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-shake {
+    animation: shake 0.3s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Profile image styles */
+.profile-image-container {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    overflow: hidden;
+    cursor: pointer;
+    border: 3px solid #e5e7eb;
+    transition: border-color 0.3s ease;
+}
+
+.profile-image-container:hover {
+    border-color: #3b82f6;
+}
+
+.profile-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.upload-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f9fafb;
+    transition: background-color 0.3s ease;
+}
+
+.profile-image-container:hover .upload-placeholder {
+    background-color: #f3f4f6;
+}
+
+.image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.profile-image-container:hover .image-overlay {
+    opacity: 1;
+}
+
+
+/* RIPPLE EFFECT FOR THE STATUS INDICATOR - FIXED VERSION */
+@keyframes ripple {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.7;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.3);
+        opacity: 0.4;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1.8);
+        opacity: 0;
+    }
+}
+
+.status-indicator {
+    position: relative;
+    overflow: visible;
+}
+
+/* Blue ripple effect only for online users - perfectly centered */
+.status-indicator.online::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%; /* Changed from 20% to 50% for perfect centering */
+    width: 120%;
+    height: 120%;
+    border-radius: 50%;
+    background-color: rgba(59, 130, 246, 0.6); /* Blue color with opacity */
+    transform: translate(-50%, -50%); /* This centers the ripple */
+    animation: ripple 2s infinite;
+    z-index: 50 !important; /* Behind the main status dot and white border */
+}
+
+/* No ripple effect for offline users */
+.status-indicator.offline::before {
+    display: none;
+}
+
+
+
+/* EDIT AND ARCHIVE MODALS */
+
+/* Enhanced Profile Image Container Styles */
+.profile-image-container {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.profile-image-container:hover {
+    transform: scale(1.05);
+    border-color: #3b82f6 !important;
+}
+
+.profile-image {
+    transition: opacity 0.3s ease;
+}
+
+.profile-image-container:hover .profile-image {
+    opacity: 0.9;
+}
+
+/* Status indicator pulse animation for online users */
+.status-indicator.online {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+    }
+}
+
+/* Animation for modal fade in */
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+}
+
+/* Loading overlay styles */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f4f6;
+    border-top: 4px solid #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Status indicator styles for online/offline */
+.status-indicator {
+    position: relative;
+}
+
+.status-indicator.online::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: 50%;
+    background: #10b981;
+    animation: pulse 2s infinite;
+    z-index: -1;
+}
+
+.status-indicator.offline {
+    background: #ef4444 !important;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .profile-image-container {
+        width: 60px;
+        height: 60px;
+    }
+}
+
+/* Form validation error styles */
+.error-message {
+    font-size: 0.75rem;
+    color: #ef4444;
+    margin-top: 0.25rem;
+}
+
+.error-message:not(.hidden) {
+    display: block;
+}
+
+/* Smooth transitions for all interactive elements */
+button, input, select, textarea {
+    transition: all 0.3s ease;
+}
+
+/* Hover effects for buttons */
+button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+/* Custom scrollbar for modal content */
+.max-h-\[95vh\]::-webkit-scrollbar {
+    width: 6px;
+}
+
+.max-h-\[95vh\]::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+.max-h-\[95vh\]::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.max-h-\[95vh\]::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+
+
+
+/* RESTORE AND DELETE PERMANENTLY ARCHIVED USERS */
+
+/* Add these CSS animations to your existing CSS file */
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Card transition effects */
+.archived-admin-card {
+    transition: all 0.3s ease;
+}
+
+.archived-admin-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Button hover effects */
+.transition-colors {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+}
+
+/* Modal backdrop */
+.bg-black.bg-opacity-50 {
+    backdrop-filter: blur(4px);
+}
+
+/* Success/Error notifications */
+.notification {
+    transition: all 0.3s ease-in-out;
+}
+
+.notification.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.notification.hide {
+    opacity: 0;
+    transform: translateX(100%);
+}
+
+
+
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}

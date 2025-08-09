@@ -1,0 +1,38 @@
+/* FOOTER PART */
+
+        /* Additional footer styles */
+        footer {
+            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        footer a:hover {
+            transform: translateY(-1px);
+            transition: all 0.2s ease;
+        }
+
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            footer .grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            footer .flex.space-x-6 {
+                flex-direction: column;
+                appearance: 0;
+                gap: 0.5rem;
+            }
+        }

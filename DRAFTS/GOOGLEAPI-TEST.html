@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Maps API Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 1200px;
+            height: 80vh;
+            min-height: 600px;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .controls {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .search-box {
+            flex: 1;
+            max-width: 300px;
+            padding: 10px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-box:focus {
+            border-color: #667eea;
+        }
+
+        #map {
+            width: 100%;
+            height: calc(100% - 140px);
+            filter: hue-rotate(10deg) saturate(1.1);
+        }
+
+        .status {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.9);
+            padding: 10px 15px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .status.success {
+            background: rgba(76, 175, 80, 0.9);
+            color: white;
+        }
+
+        .status.error {
+            background: rgba(244, 67, 54, 0.9);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-box {
+                max-width: none;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗺️ Google Maps API Test</h1>
+            <p>Testing your API key functionality</p>
+        </div>
+        
+        <div class="controls">
+            <input type="text" id="searchBox" class="search-box" placeholder="Search for places...">
+            <button class="btn" onclick="searchPlace()">🔍 Search</button>
+            <button class="btn" onclick="addMarker()">📍 Add Marker</button>
+            <button class="btn" onclick="clearMarkers()">🗑️ Clear Markers</button>
+            <button class="btn" onclick="toggleMapType()">🛰️ Toggle View</button>
+        </div>
+        
+        <div id="map"></div>
+    </div>
+
+    <div id="status" class="status">Loading Map...</div>
+
+    <script>
+        let map;
+        let markers = [];
+        let service;
+        let infoWindow;
+        let isRoadmapView = true;
+
+        // Initialize the map
+        function initMap() {
+            try {
+                // Create map centered on Manila, Philippines
+                map = new google.maps.Map(document.getElementById("map"), {
+                    zoom: 12,
+                    center: { lat: 14.5995, lng: 120.9842 }, // Manila coordinates
+                    mapTypeId: google.maps.MapTypeId.ROADMAP,
+                    styles: [
+                        {
+                            featureType: "water",
+                            elementType: "geometry",
+                            stylers: [{ color: "#193341" }]
+                        },
+                        {
+                            featureType: "landscape",
+                            elementType: "geometry",
+                            stylers: [{ color: "#2c5234" }]
+                        }
+                    ]
+                });
+
+                // Initialize services
+                service = new google.maps.places.PlacesService(map);
+                infoWindow = new google.maps.InfoWindow();
+
+                // Add initial marker for Manila
+                addInitialMarker();
+
+                // Set up search box autocomplete
+                const searchBox = document.getElementById('searchBox');
+                const autocomplete = new google.maps.places.Autocomplete(searchBox);
+                autocomplete.bindTo('bounds', map);
+
+                autocomplete.addListener('place_changed', function() {
+                    const place = autocomplete.getPlace();
+                    if (place.geometry) {
+                        map.setCenter(place.geometry.location);
+                        map.setZoom(15);
+                        
+                        // Add marker for the searched place
+                        const marker = new google.maps.Marker({
+                            position: place.geometry.location,
+                            map: map,
+                            title: place.name,
+                            animation: google.maps.Animation.DROP
+                        });
+                        
+                        markers.push(marker);
+                        
+                        // Show info window
+                        infoWindow.setContent(`
+                            <div style="padding: 10px;">
+                                <strong>${place.name}</strong><br>
+                                ${place.formatted_address || 'Address not available'}
+                            </div>
+                        `);
+                        infoWindow.open(map, marker);
+                    }
+                });
+
+                // Add click listener to map
+                map.addListener('click', function(event) {
+                    addMarkerAtLocation(event.latLng);
+                });
+
+                updateStatus('✅ Map loaded successfully!', 'success');
+                
+                // Hide status after 3 seconds
+                setTimeout(() => {
+                    document.getElementById('status').style.display = 'none';
+                }, 3000);
+
+            } catch (error) {
+                console.error('Error initializing map:', error);
+                updateStatus('❌ Error loading map: ' + error.message, 'error');
+            }
+        }
+
+        function addInitialMarker() {
+            const manilaMarker = new google.maps.Marker({
+                position: { lat: 14.5995, lng: 120.9842 },
+                map: map,
+                title: "Manila, Philippines",
+                icon: {
+                    url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                        <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="20" cy="20" r="18" fill="#667eea" stroke="white" stroke-width="3"/>
+                            <circle cx="20" cy="20" r="8" fill="white"/>
+                        </svg>
+                    `),
+                    scaledSize: new google.maps.Size(40, 40)
+                }
+            });
+
+            markers.push(manilaMarker);
+
+            manilaMarker.addListener('click', function() {
+                infoWindow.setContent(`
+                    <div style="padding: 15px; text-align: center;">
+                        <strong>🏙️ Manila, Philippines</strong><br>
+                        <em>Capital of the Philippines</em><br>
+                        <small>Lat: 14.5995, Lng: 120.9842</small>
+                    </div>
+                `);
+                infoWindow.open(map, manilaMarker);
+            });
+        }
+
+        function searchPlace() {
+            const query = document.getElementById('searchBox').value;
+            if (!query.trim()) {
+                alert('Please enter a search term');
+                return;
+            }
+
+            const request = {
+                query: query,
+                fields: ['name', 'geometry', 'formatted_address', 'rating', 'photos']
+            };
+
+            service.findPlaceFromQuery(request, function(results, status) {
+                if (status === google.maps.places.PlacesServiceStatus.OK && results[0]) {
+                    const place = results[0];
+                    map.setCenter(place.geometry.location);
+                    map.setZoom(15);
+
+                    const marker = new google.maps.Marker({
+                        position: place.geometry.location,
+                        map: map,
+                        title: place.name,
+                        animation: google.maps.Animation.BOUNCE
+                    });
+
+                    setTimeout(() => marker.setAnimation(null), 2000);
+                    markers.push(marker);
+
+                    infoWindow.setContent(`
+                        <div style="padding: 10px; max-width: 200px;">
+                            <strong>${place.name}</strong><br>
+                            ${place.formatted_address || 'Address not available'}<br>
+                            ${place.rating ? `⭐ Rating: ${place.rating}` : ''}
+                        </div>
+                    `);
+                    infoWindow.open(map, marker);
+                } else {
+                    alert('Place not found. Please try a different search term.');
+                }
+            });
+        }
+
+        function addMarker() {
+            const center = map.getCenter();
+            addMarkerAtLocation(center);
+        }
+
+        function addMarkerAtLocation(location) {
+            const marker = new google.maps.Marker({
+                position: location,
+                map: map,
+                title: `Custom Marker ${markers.length + 1}`,
+                animation: google.maps.Animation.DROP
+            });
+
+            markers.push(marker);
+
+            marker.addListener('click', function() {
+                infoWindow.setContent(`
+                    <div style="padding: 10px;">
+                        <strong>Custom Marker</strong><br>
+                        Lat: ${location.lat().toFixed(6)}<br>
+                        Lng: ${location.lng().toFixed(6)}
+                    </div>
+                `);
+                infoWindow.open(map, marker);
+            });
+        }
+
+        function clearMarkers() {
+            markers.forEach(marker => marker.setMap(null));
+            markers = [];
+            infoWindow.close();
+        }
+
+        function toggleMapType() {
+            if (isRoadmapView) {
+                map.setMapTypeId(google.maps.MapTypeId.SATELLITE);
+                isRoadmapView = false;
+            } else {
+                map.setMapTypeId(google.maps.MapTypeId.ROADMAP);
+                isRoadmapView = true;
+            }
+        }
+
+        function updateStatus(message, type = '') {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+            statusEl.style.display = 'block';
+        }
+
+        // Handle API loading errors
+        window.gm_authFailure = function() {
+            updateStatus('❌ Google Maps API authentication failed', 'error');
+        };
+    </script>
+
+    <script async defer 
+            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAOVYRIgupAurZup5y1PRh8Ismb1A3lLao&libraries=places&callback=initMap">
+    </script>
+</body>
+</html>

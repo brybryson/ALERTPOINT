@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barangay Admin Form</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .animate-fade-in-up {
+            animation: fadeInUp 0.3s ease-out forwards;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-shake {
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+        
+        .input-group {
+            position: relative;
+        }
+        
+        .input-group input:focus + label,
+        .input-group input:not(:placeholder-shown) + label {
+            transform: translateY(-1.5rem) scale(0.75);
+            color: #10b981;
+        }
+        
+        .floating-label {
+            position: absolute;
+            left: 0.75rem;
+            top: 0.75rem;
+            transition: all 0.2s ease;
+            pointer-events: none;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <!-- Trigger Button for Demo -->
+    <button onclick="openAddAdminModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105">
+        <i class="fas fa-user-plus mr-2"></i>
+        Add Barangay Admin
+    </button>
+
+    <!-- Add Admin Modal -->
+    <div id="addAdminModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 hidden backdrop-blur-sm">
+        <div class="glass-effect rounded-3xl shadow-2xl w-full max-w-2xl mx-4 animate-fade-in-up border border-white/20">
+            <!-- Header -->
+            <div class="gradient-bg p-6 rounded-t-3xl text-white">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-white/20 p-2 rounded-full">
+                            <i class="fas fa-user-shield text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold">Add Barangay Admin</h3>
+                            <p class="text-white/80 text-sm">Create a new administrative account</p>
+                        </div>
+                    </div>
+                    <button onclick="confirmClose()" class="text-white/80 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Form -->
+            <div class="p-8">
+                <form id="addAdminForm" class="space-y-6">
+                    <!-- Personal Information Section -->
+                    <div class="space-y-4">
+                        <h4 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">
+                            <i class="fas fa-user text-blue-600 mr-2"></i>
+                            Personal Information
+                        </h4>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="input-group">
+                                <input type="text" id="admin_fn" name="admin_fn" placeholder=" " 
+                                       class="w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-green-500 transition-colors bg-white/50" required>
+                                <label for="admin_fn" class="floating-label">First Name *</label>
+                                <div class="error-message text-red-500 text-sm mt-1 hidden"></div>
+                            </div>
+                            
+                            <div class="input-group">
+                                <input type="text" id="admin_mn" name="admin_mn" placeholder=" " 
+                                       class="w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-green-500 transition-colors bg-white/50">
+                                <label for="admin_mn" class="floating-label">Middle Name</label>
+                                <div class="error-message text-red-500 text-sm mt-1 hidden"></div>
+                            </div>
+                            
+                            <div class="input-group">
+                                <input type="text" id="admin_ln" name="admin_ln" placeholder=" " 
+                                       class="w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-green-500 transition-colors bg-white/50" required>
+                                <label for="admin_ln" class="floating-label">Last Name *</label>
+                                <div class="error-message text-red-500 text-sm mt-1 hidden"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Position Section -->
+                    <div class="space-y-4">
+                        <h4 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">
+                            <i class="fas fa-briefcase text-blue-600 mr-2"></i>
+                            Barangay Position
+                        </h4>
+                        
+                        <div class="input-group">
+                            <select id="role" name="role" 
+                                    class="w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-green-500 transition-colors bg-white/50" required>
+                                <option value="">Select Barangay Position</option>
+                                <option value="Barangay Captain (Punong Barangay)">Barangay Captain (Punong Barangay)</option>
+                                <option value="Barangay Councilor (Kagawad)">Barangay Councilor (Kagawad)</option>
+                                <option value="SK Chairperson">SK Chairperson</option>
+                                <option value="Barangay Secretary">Barangay Secretary</option>
+                                <option value="Barangay Treasurer">Barangay Treasurer</option>
+                                <option value="Barangay Tanod (Watchmen)">Barangay Tanod (Watchmen)</option>
+                                <option value="Lupong Tagapamayapa Member">Lupong Tagapamayapa Member</option>
+                                <option value="Barangay Health Worker (BHW)">Barangay Health Worker (BHW)</option>
+                                <option value="Day Care Worker">Day Care Worker</option>
+                                <option value="Barangay Nutrition Scholar (BNS)">Barangay Nutrition Scholar (BNS)</option>
+                                <option value="BDRRMC Member">Barangay Disaster Risk Reduction and Management Committee (BDRRMC)</option>
+                                <option value="other">Other (Specify)</option>
+                            </select>
+                            <div class="error-message text-red-500 text-sm mt-1 hidden"></div>
+                        </div>
+                        
+                        <div id="customRoleDiv" class="input-group hidden">
+                            <input type="text" id="customRole" name="customRole" placeholder=" " 
+                                   class="w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-green-500 transition-colors bg-white/50">
+                            <label for="customRole" class="floating-label">Specify Position *</label>
+                            <div class="error-message text-red-500 text-sm mt-1 hidden"></div>
+                        </div>
+                    </div>
+
+                    <!-- Account Information Section -->
+                    <div class="space-y-4">
+                        <h4 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">
+                            <i class="fas fa-key text-blue-600 mr-2"></i>
+                            Account Information
+                        </h4>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="input-group">
+                                <input type="text" id="username" name="username" placeholder=" " readonly
+                                       class="w-full px-4 py-3 border-2 rounded-xl bg-gray-100 text-gray-600 cursor-not-allowed">
+                                <label for="username" class="floating-label">Username (Auto-generated)</label>
+                                <div class="text-xs text-gray-500 mt-1">Format: admin_[firstname]</div>
+                            </div>
+                            
+                            <div class="input-group">
+                                <input type="password" id="password" name="password" placeholder=" " 
+                                       class="w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-green-500 transition-colors bg-white/50" required>
+                                <label for="password" class="floating-label">Password *</label>
+                                <button type="button" onclick="togglePassword()" class="absolute right-3 top-3 text-gray-500 hover:text-gray-700">
+                                    <i id="passwordToggle" class="fas fa-eye"></i>
+                                </button>
+                                <div class="error-message text-red-500 text-sm mt-1 hidden"></div>
+                                <div class="text-xs text-gray-500 mt-1">Minimum 8 characters, include letters and numbers</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex justify-end pt-6 space-x-4 border-t">
+                        <button type="button" onclick="confirmClose()" 
+                                class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl transition-colors shadow-md">
+                            <i class="fas fa-times mr-2"></i>
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                                class="px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105">
+                            <i class="fas fa-user-plus mr-2"></i>
+                            Create Admin Account
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 hidden backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 animate-fade-in-up">
+            <div class="p-6">
+                <div class="flex items-center justify-center mb-4">
+                    <div id="confirmIcon" class="w-16 h-16 rounded-full flex items-center justify-center">
+                        <i id="confirmIconClass" class="text-3xl"></i>
+                    </div>
+                </div>
+                <h3 id="confirmTitle" class="text-xl font-bold text-center mb-2"></h3>
+                <p id="confirmMessage" class="text-gray-600 text-center mb-6"></p>
+                <div class="flex justify-center space-x-4">
+                    <button id="confirmCancel" class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors">
+                        Cancel
+                    </button>
+                    <button id="confirmAction" class="px-6 py-2 rounded-lg transition-colors">
+                        Confirm
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Form validation and handling
+        let formData = {};
+        
+        function openAddAdminModal() {
+            document.getElementById('addAdminModal').classList.remove('hidden');
+            document.getElementById('admin_fn').focus();
+        }
+        
+        function closeAddAdminModal() {
+            document.getElementById('addAdminModal').classList.add('hidden');
+            resetForm();
+        }
+        
+        function resetForm() {
+            document.getElementById('addAdminForm').reset();
+            document.getElementById('customRoleDiv').classList.add('hidden');
+            document.getElementById('username').value = '';
+            clearAllErrors();
+        }
+        
+        function confirmClose() {
+            const form = document.getElementById('addAdminForm');
+            const hasData = Array.from(form.elements).some(element => 
+                element.type !== 'submit' && element.type !== 'button' && element.value.trim() !== ''
+            );
+            
+            if (hasData) {
+                showConfirmation(
+                    'warning',
+                    'Discard Changes?',
+                    'Are you sure you want to close? All unsaved changes will be lost.',
+                    () => closeAddAdminModal(),
+                    'Discard',
+                    'bg-red-500 hover:bg-red-600 text-white'
+                );
+            } else {
+                closeAddAdminModal();
+            }
+        }
+        
+        function showConfirmation(type, title, message, onConfirm, confirmText = 'Confirm', confirmClass = 'bg-blue-500 hover:bg-blue-600 text-white') {
+            const modal = document.getElementById('confirmationModal');
+            const icon = document.getElementById('confirmIcon');
+            const iconClass = document.getElementById('confirmIconClass');
+            const titleEl = document.getElementById('confirmTitle');
+            const messageEl = document.getElementById('confirmMessage');
+            const confirmBtn = document.getElementById('confirmAction');
+            const cancelBtn = document.getElementById('confirmCancel');
+            
+            // Set icon and colors based on type
+            if (type === 'warning') {
+                icon.className = 'w-16 h-16 rounded-full flex items-center justify-center bg-yellow-100';
+                iconClass.className = 'fas fa-exclamation-triangle text-3xl text-yellow-500';
+            } else if (type === 'success') {
+                icon.className = 'w-16 h-16 rounded-full flex items-center justify-center bg-green-100';
+                iconClass.className = 'fas fa-check-circle text-3xl text-green-500';
+            } else if (type === 'question') {
+                icon.className = 'w-16 h-16 rounded-full flex items-center justify-center bg-blue-100';
+                iconClass.className = 'fas fa-question-circle text-3xl text-blue-500';
+            }
+            
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+            confirmBtn.textContent = confirmText;
+            confirmBtn.className = `px-6 py-2 rounded-lg transition-colors ${confirmClass}`;
+            
+            // Set up event listeners
+            confirmBtn.onclick = () => {
+                modal.classList.add('hidden');
+                onConfirm();
+            };
+            
+            cancelBtn.onclick = () => {
+                modal.classList.add('hidden');
+            };
+            
+            modal.classList.remove('hidden');
+        }
+        
+        // Auto-generate username based on first name
+        document.getElementById('admin_fn').addEventListener('input', function() {
+            const firstName = this.value.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+            const username = firstName ? `admin_${firstName}` : '';
+            document.getElementById('username').value = username;
+        });
+        
+        // Handle role selection
+        document.getElementById('role').addEventListener('change', function() {
+            const customRoleDiv = document.getElementById('customRoleDiv');
+            const customRoleInput = document.getElementById('customRole');
+            
+            if (this.value === 'other') {
+                customRoleDiv.classList.remove('hidden');
+                customRoleInput.required = true;
+            } else {
+                customRoleDiv.classList.add('hidden');
+                customRoleInput.required = false;
+                customRoleInput.value = '';
+            }
+        });
+        
+        // Password toggle
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('passwordToggle');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.className = 'fas fa-eye-slash';
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.className = 'fas fa-eye';
+            }
+        }
+        
+        // Validation functions
+        function validateField(fieldId, validationFn, errorMessage) {
+            const field = document.getElementById(fieldId);
+            const errorDiv = field.parentElement.querySelector('.error-message');
+            
+            if (!validationFn(field.value)) {
+                field.classList.add('border-red-500', 'animate-shake');
+                errorDiv.textContent = errorMessage;
+                errorDiv.classList.remove('hidden');
+                setTimeout(() => field.classList.remove('animate-shake'), 500);
+                return false;
+            } else {
+                field.classList.remove('border-red-500');
+                errorDiv.classList.add('hidden');
+                return true;
+            }
+        }
+        
+        function clearAllErrors() {
+            document.querySelectorAll('.error-message').forEach(error => {
+                error.classList.add('hidden');
+            });
+            document.querySelectorAll('input, select').forEach(field => {
+                field.classList.remove('border-red-500');
+            });
+        }
+        
+        function validateForm() {
+            let isValid = true;
+            
+            // First Name validation
+            if (!validateField('admin_fn', val => val.trim().length >= 2, 'First name must be at least 2 characters')) {
+                isValid = false;
+            }
+            
+            // Last Name validation
+            if (!validateField('admin_ln', val => val.trim().length >= 2, 'Last name must be at least 2 characters')) {
+                isValid = false;
+            }
+            
+            // Role validation
+            const roleSelect = document.getElementById('role');
+            if (!roleSelect.value) {
+                const errorDiv = roleSelect.parentElement.querySelector('.error-message');
+                roleSelect.classList.add('border-red-500');
+                errorDiv.textContent = 'Please select a barangay position';
+                errorDiv.classList.remove('hidden');
+                isValid = false;
+            }
+            
+            // Custom role validation (if "other" is selected)
+            if (roleSelect.value === 'other') {
+                if (!validateField('customRole', val => val.trim().length >= 2, 'Please specify the position')) {
+                    isValid = false;
+                }
+            }
+            
+            // Password validation
+            if (!validateField('password', 
+                val => val.length >= 8 && /[a-zA-Z]/.test(val) && /[0-9]/.test(val), 
+                'Password must be at least 8 characters with letters and numbers')) {
+                isValid = false;
+            }
+            
+            return isValid;
+        }
+        
+        // Form submission
+        document.getElementById('addAdminForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!validateForm()) {
+                return;
+            }
+            
+            // Collect form data
+            const formData = new FormData(this);
+            const data = {
+                firstName: formData.get('admin_fn'),
+                middleName: formData.get('admin_mn') || '',
+                lastName: formData.get('admin_ln'),
+                role: formData.get('role') === 'other' ? formData.get('customRole') : formData.get('role'),
+                username: formData.get('username'),
+                password: formData.get('password')
+            };
+            
+            // Show confirmation
+            showConfirmation(
+                'question',
+                'Create Admin Account?',
+                `Are you sure you want to create an admin account for ${data.firstName} ${data.lastName}?`,
+                () => submitForm(data),
+                'Create Account',
+                'bg-green-500 hover:bg-green-600 text-white'
+            );
+        });
+        
+        function submitForm(data) {
+            // Simulate form submission
+            console.log('Submitting admin data:', data);
+            
+            // Here you would typically send the data to your server
+            // For demo purposes, we'll just show a success message
+            setTimeout(() => {
+                showConfirmation(
+                    'success',
+                    'Admin Created Successfully!',
+                    `Admin account for ${data.firstName} ${data.lastName} has been created successfully.`,
+                    () => closeAddAdminModal(),
+                    'OK',
+                    'bg-green-500 hover:bg-green-600 text-white'
+                );
+            }, 1000);
+        }
+        
+        // Close modal when clicking outside
+        window.addEventListener('click', function(e) {
+            const modal = document.getElementById('addAdminModal');
+            const confirmModal = document.getElementById('confirmationModal');
+            
+            if (e.target === modal) {
+                confirmClose();
+            }
+            
+            if (e.target === confirmModal) {
+                confirmModal.classList.add('hidden');
+            }
+        });
+        
+        // Prevent form submission on Enter key in text inputs
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type === 'text') {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>

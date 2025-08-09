@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlertPoint User Management</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/Prototype/css/Users.css">
+    <link rel="stylesheet" href="/Prototype/css/footer.css">
+    <link rel="stylesheet" href="/Prototype/css/nav-bar.css">
+
+    <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+
+    <!-- Add Firebase products that you want to use -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+    
+
+
+</head>
+<style>
+    /* Profile image styles */
+.profile-image-container {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    overflow: hidden;
+    cursor: pointer;
+    border: 3px solid #e5e7eb;
+    transition: border-color 0.3s ease;
+}
+
+.profile-image-container:hover {
+    border-color: #3b82f6;
+}
+
+.profile-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.upload-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f9fafb;
+    transition: background-color 0.3s ease;
+}
+
+.profile-image-container:hover .upload-placeholder {
+    background-color: #f3f4f6;
+}
+
+.image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.profile-image-container:hover .image-overlay {
+    opacity: 1;
+}
+</style>
+
+
+ <button onclick="openAddAdminModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors">
+                        <i class="fas fa-user-gear mr-2"></i>Add Admin
+                    </button>
+
+                    <!-- Add Admin Modal -->
+    <div id="addAdminModal" class="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-50 hidden">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl mx-4 animate-fade-in max-h-[95vh] overflow-y-auto">
+            <!-- Header -->
+            <div class="flex justify-between items-center p-6 border-b border-gray-200 bg-blue-50 rounded-t-xl">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user-plus text-blue-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900">Add Barangay Admin</h3>
+                </div>
+                <button onclick="confirmClose()" class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-colors">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Form -->
+            <div class="p-6">
+                <form id="addAdminForm" class="space-y-6">
+                    
+                    <!-- Two Column Layout -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        
+                        <!-- Left Column -->
+                        <div class="space-y-6">
+                            
+                            <!-- Personal Information Section -->
+                            <div class="space-y-4">
+                                <div class="flex items-center space-x-3 pb-2 border-b border-gray-200">
+                                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-user text-blue-600 text-sm"></i>
+                                    </div>
+                                    <h4 class="text-lg font-medium text-gray-900">Personal Information</h4>
+                                </div>
+                                
+                                <!-- Profile Photo - Inside Personal Information -->
+                                <div class="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                                    <div class="profile-image-container">
+                                        <img id="profilePreview" src="" alt="Profile Preview" class="profile-image hidden">
+                                        <div id="uploadPlaceholder" class="upload-placeholder">
+                                            <i class="fas fa-camera text-gray-400 text-lg"></i>
+                                        </div>
+                                        <div class="image-overlay">
+                                            <i class="fas fa-camera text-white text-sm"></i>
+                                        </div>
+                                        <input type="file" id="profileImageInput" accept=".png,.jpg,.jpeg" class="hidden">
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-gray-700 mb-2">Profile Photo</p>
+                                        <div class="flex space-x-2 mb-2">
+                                            <button type="button" onclick="uploadPhoto()" class="px-3 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors">
+                                                <i class="fas fa-upload mr-1"></i>Upload
+                                            </button>
+                                            <button type="button" onclick="removePhoto()" id="removePhotoBtn" class="px-3 py-1 text-xs bg-red-500 hover:bg-red-600 text-white rounded transition-colors hidden">
+                                                <i class="fas fa-trash mr-1"></i>Remove
+                                            </button>
+                                        </div>
+                                        <p class="text-xs text-gray-500">PNG, JPG, JPEG only. Max 5MB</p>
+                                        <div class="error-message text-red-500 text-xs mt-1 hidden" id="photoError"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            <i class="fas fa-user-circle text-gray-400 mr-2"></i>First Name *
+                                        </label>
+                                        <input type="text" id="admin_fn" name="admin_fn" 
+                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" 
+                                               placeholder="Enter first name" required>
+                                        <div class="error-message text-red-500 text-xs mt-1 hidden"></div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            <i class="fas fa-user-circle text-gray-400 mr-2"></i>Last Name *
+                                        </label>
+                                        <input type="text" id="admin_ln" name="admin_ln" 
+                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" 
+                                               placeholder="Enter last name" required>
+                                        <div class="error-message text-red-500 text-xs mt-1 hidden"></div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-user text-gray-400 mr-2"></i>Middle Name
+                                    </label>
+                                    <input type="text" id="admin_mn" name="admin_mn" 
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" 
+                                           placeholder="Enter middle name (optional)">
+                                </div>
+
+                                <!-- Birthdate Section -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-calendar text-gray-400 mr-2"></i>Birthdate *
+                                    </label>
+                                    <div class="grid grid-cols-3 gap-3">
+                                        <div>
+                                            <select id="birth_month" name="birth_month" 
+                                                    class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white" required>
+                                                <option value="">Month</option>
+                                                <option value="01">January</option>
+                                                <option value="02">February</option>
+                                                <option value="03">March</option>
+                                                <option value="04">April</option>
+                                                <option value="05">May</option>
+                                                <option value="06">June</option>
+                                                <option value="07">July</option>
+                                                <option value="08">August</option>
+                                                <option value="09">September</option>
+                                                <option value="10">October</option>
+                                                <option value="11">November</option>
+                                                <option value="12">December</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <select id="birth_day" name="birth_day" 
+                                                    class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white" required>
+                                                <option value="">Day</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <select id="birth_year" name="birth_year" 
+                                                    class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white" required>
+                                                <option value="">Year</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="error-message text-red-500 text-xs mt-1 hidden" id="birthdateError"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column -->
+                        <div class="space-y-6">
+                            
+                            <!-- Barangay Position Section -->
+                            <div class="space-y-4">
+                                <div class="flex items-center space-x-3 pb-2 border-b border-gray-200">
+                                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-briefcase text-green-600 text-sm"></i>
+                                    </div>
+                                    <h4 class="text-lg font-medium text-gray-900">Barangay Position</h4>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-id-badge text-gray-400 mr-2"></i>Position/Role *
+                                    </label>
+                                    <select id="role" name="role" 
+                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white" required>
+                                        <option value="">Select Position</option>
+                                        <option value="Barangay Captain (Punong Barangay)">Barangay Captain (Punong Barangay)</option>
+                                        <option value="Barangay Councilor (Kagawad)">Barangay Councilor (Kagawad)</option>
+                                        <option value="SK Chairperson">SK Chairperson</option>
+                                        <option value="Barangay Secretary">Barangay Secretary</option>
+                                        <option value="Barangay Treasurer">Barangay Treasurer</option>
+                                        <option value="Barangay Tanod (Watchmen)">Barangay Tanod (Watchmen)</option>
+                                        <option value="Lupong Tagapamayapa Member">Lupong Tagapamayapa Member</option>
+                                        <option value="Barangay Health Worker (BHW)">Barangay Health Worker (BHW)</option>
+                                        <option value="Day Care Worker">Day Care Worker</option>
+                                        <option value="Barangay Nutrition Scholar (BNS)">Barangay Nutrition Scholar (BNS)</option>
+                                        <option value="BDRRMC Member">BDRRMC Member</option>
+                                        <option value="other">Other (Specify)</option>
+                                    </select>
+                                    <div class="error-message text-red-500 text-xs mt-1 hidden"></div>
+                                </div>
+                                
+                                <div id="customRoleDiv" class="hidden">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-edit text-gray-400 mr-2"></i>Specify Position *
+                                    </label>
+                                    <input type="text" id="customRole" name="customRole" 
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" 
+                                           placeholder="Enter custom position">
+                                    <div class="error-message text-red-500 text-xs mt-1 hidden"></div>
+                                </div>
+                            </div>
+
+                            <!-- Account Information Section -->
+                            <div class="space-y-4">
+                                <div class="flex items-center space-x-3 pb-2 border-b border-gray-200">
+                                    <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-key text-purple-600 text-sm"></i>
+                                    </div>
+                                    <h4 class="text-lg font-medium text-gray-900">Account Information</h4>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-at text-gray-400 mr-2"></i>Username *
+                                    </label>
+                                    <input type="text" id="username" name="username" readonly
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed">
+                                    <div class="flex items-center text-xs text-gray-500 mt-2">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        Auto-generated: admin_[firstname]
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-lock text-gray-400 mr-2"></i>Password *
+                                    </label>
+                                    <div class="relative">
+                                        <input type="password" id="password" name="password" 
+                                               class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" 
+                                               placeholder="Enter password" required>
+                                        <button type="button" onclick="togglePassword()" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                                            <i id="passwordToggle" class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <div class="error-message text-red-500 text-xs mt-1 hidden"></div>
+                                    <div class="flex items-center text-xs text-gray-500 mt-2">
+                                        <i class="fas fa-shield-alt mr-1"></i>
+                                        Minimum 8 characters with letters and numbers
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                        <button type="button" onclick="confirmClose()" 
+                                class="px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center space-x-2">
+                            <i class="fas fa-times"></i>
+                            <span>Cancel</span>
+                        </button>
+                        <button type="submit" 
+                                class="px-6 py-3 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-2 shadow-lg">
+                            <i class="fas fa-plus"></i>
+                            <span>Create Admin</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 animate-fade-in">
+            <div class="p-6 text-center">
+                <div id="confirmIcon" class="w-12 h-12 mx-auto mb-4 rounded-full flex items-center justify-center">
+                    <i id="confirmIconClass" class="text-xl"></i>
+                </div>
+                <h3 id="confirmTitle" class="text-lg font-medium mb-4"></h3>
+                <div id="confirmMessage" class="text-gray-600 text-sm mb-6"></div>
+                <div class="flex justify-center space-x-3">
+                    <button id="confirmCancel" class="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors">
+                        Cancel
+                    </button>
+                    <button id="confirmAction" class="px-4 py-2 text-sm rounded-md transition-colors">
+                        Confirm
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Details Confirmation Modal -->
+<!-- Admin Details Confirmation Modal -->
+<div id="adminDetailsModal" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 animate-fade-in relative z-[10000]">
+        <!-- Header -->
+        <div class="flex justify-between items-center p-6 border-b border-gray-200 bg-blue-50 rounded-t-xl">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user-check text-blue-600"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900">Confirm Admin Details</h3>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="p-6">
+            <div class="text-center mb-6">
+                <p class="text-gray-600 text-sm mb-4">Please review the admin details before creating the account:</p>
+            </div>
+            
+            <!-- Details Display -->
+            <div id="adminDetailsContent" class="space-y-3 mb-6 bg-gray-50 p-4 rounded-lg">
+                <!-- Details will be populated by JavaScript -->
+            </div>
+
+            <div class="text-center text-gray-600 text-sm mb-6">
+                Are all the details correct?
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-center space-x-4">
+                <button id="cancelDetailsBtn" type="button" 
+                        class="px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center space-x-2">
+                    <i class="fas fa-times"></i>
+                    <span>Cancel</span>
+                </button>
+                <button id="confirmDetailsBtn" type="button" 
+                        class="px-6 py-3 text-sm font-medium bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center space-x-2 shadow-lg">
+                    <i class="fas fa-check"></i>
+                    <span>Confirm</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Success Modal -->
+<!-- Success Modal -->
+<div id="successModal" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 animate-fade-in relative z-[10000]">
+        <!-- Content -->
+        <div class="p-8 text-center">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-check-circle text-green-500 text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Success!</h3>
+            <p id="successMessage" class="text-gray-600 text-sm mb-6">
+                Admin account has been created successfully.
+            </p>
+            <button id="successOkBtn" type="button" 
+                    class="px-6 py-3 text-sm font-medium bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors shadow-lg">
+                <i class="fas fa-check mr-2"></i>OK
+            </button>
+        </div>
+    </div>
+</div> 
