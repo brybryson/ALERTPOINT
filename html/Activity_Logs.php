@@ -1369,7 +1369,8 @@ function getCurrentServerDate() {
 
 
     
-<!-- Profile Modal - Add this after the editAdminModal -->
+
+<!-- Profile Modal - Enhanced Version -->
 <div id="profileModal" class="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-50 hidden">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl mx-4 max-h-[95vh] overflow-y-auto">
         <!-- Header -->
@@ -1399,12 +1400,12 @@ function getCurrentServerDate() {
                             <img id="profilePhoto" src="" alt="Profile Photo"
                                 class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg hidden">
                             <div id="profileInitials" class="w-24 h-24 bg-blue-500 rounded-full flex items-center justify-center border-4 border-white shadow-lg">
-                                <span class="text-white text-2xl font-bold"></span>
+                                <span class="text-white text-2xl font-bold">-</span>
                             </div>
                         </div>
                         <div class="text-center">
-                            <h4 id="profileFullName" class="text-xl font-bold text-gray-900"></h4>
-                            <p id="profilePosition" class="text-sm text-gray-600"></p>
+                            <h4 id="profileFullName" class="text-xl font-bold text-gray-900">-</h4>
+                            <p id="profilePosition" class="text-sm text-gray-600">-</p>
                         </div>
                     </div>
 
@@ -1486,15 +1487,15 @@ function getCurrentServerDate() {
                             <div class="p-4 bg-gray-50 rounded-lg">
                                 <label class="block text-sm font-medium text-gray-500 mb-1">Account Status</label>
                                 <div class="flex items-center space-x-2">
-                                    <div id="profileAccountStatusDot" class="w-2 h-2 rounded-full bg-green-500"></div>
-                                    <p id="profileAccountStatus" class="text-gray-900 font-medium capitalize">-</p>
+                                    <div id="profileAccountStatusDot" class="w-2 h-2 rounded-full bg-gray-500"></div>
+                                    <p id="profileAccountStatus" class="text-gray-900 font-medium">-</p>
                                 </div>
                             </div>
                             <div class="p-4 bg-gray-50 rounded-lg">
                                 <label class="block text-sm font-medium text-gray-500 mb-1">User Status</label>
                                 <div class="flex items-center space-x-2">
-                                    <div id="profileUserStatusDot" class="w-2 h-2 rounded-full bg-green-500"></div>
-                                    <p id="profileUserStatus" class="text-gray-900 font-medium capitalize">-</p>
+                                    <div id="profileUserStatusDot" class="w-2 h-2 rounded-full bg-gray-500"></div>
+                                    <p id="profileUserStatus" class="text-gray-900 font-medium">-</p>
                                 </div>
                             </div>
                         </div>
@@ -1791,8 +1792,260 @@ function getCurrentServerDate() {
     <!-- Scripts -->
     <script src="/ALERTPOINT/javascript/footer.js"></script>
     <script src="/ALERTPOINT/javascript/nav-bar.js"></script>
-    <script src="/ALERTPOINT/javascript/profile.js"></script>
+    <!-- <script src="/ALERTPOINT/javascript/profile.js"></script> -->
     <script src="/ALERTPOINT/javascript/LOGS/admin_login_logs.js"></script>
+
+    <script>
+// Profile Modal Functions for Activity Logs Page
+function openProfileModal() {
+    // Close settings dropdown first
+    const dropdown = document.getElementById('settingsDropdown');
+    if (dropdown && !dropdown.classList.contains('pointer-events-none')) {
+        dropdown.classList.add('pointer-events-none');
+        dropdown.classList.remove('opacity-100', 'scale-100');
+        dropdown.classList.add('opacity-0', 'scale-95');
+    }
+    
+    // Use PHP data directly instead of fetching
+    populateProfileModalWithPHPData();
+    document.getElementById('profileModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeProfileModal() {
+    document.getElementById('profileModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+function populateProfileModalWithPHPData() {
+    // Get PHP data that's already available
+    const currentAdmin = <?php echo json_encode($currentAdmin); ?>;
+    
+    if (currentAdmin) {
+        // Debug: log the data to see what we have
+        console.log('Current Admin Data:', currentAdmin);
+        populateProfileModal(currentAdmin);
+    } else {
+        // Fallback if no PHP data
+        console.error('No current admin data available');
+        alert('Profile data not available. Please refresh the page.');
+        closeProfileModal();
+    }
+}
+
+function populateProfileModal(user) {
+    console.log('Populating modal with user data:', user); // Debug log
+    
+    // Basic Information - try multiple possible field names
+    document.getElementById('profileAdminId').textContent = user.admin_id || user.id || '-';
+    document.getElementById('profileFirstName').textContent = user.first_name || user.firstname || '-';
+    document.getElementById('profileMiddleName').textContent = user.middle_name || user.middlename || '-';
+    document.getElementById('profileLastName').textContent = user.last_name || user.lastname || '-';
+    document.getElementById('profileEmail').textContent = user.user_email || user.email || user.email_address || '-';
+    document.getElementById('profileUsername').textContent = user.username || user.user_name || '-';
+    document.getElementById('profileRole').textContent = user.role || user.user_role || user.admin_role || '-';
+    
+    // Full Name Construction
+    const fullName = getFullName(
+        user.first_name || user.firstname || '', 
+        user.middle_name || user.middlename || '', 
+        user.last_name || user.lastname || ''
+    );
+    document.getElementById('profileFullName').textContent = fullName;
+    document.getElementById('profilePosition').textContent = user.barangay_position || user.position || 'Admin';
+
+    // Handle Profile Photo
+    const profilePhotoElement = document.getElementById('profilePhoto');
+    const profileInitialsElement = document.getElementById('profileInitials');
+    
+    if (user.picture && user.picture !== 'NULL' && user.picture !== 'null' && user.picture.trim() !== '') {
+        // Convert ../../ to /ALERTPOINT/
+        let normalizedPath = user.picture;
+        if (normalizedPath.startsWith('../../')) {
+            normalizedPath = normalizedPath.replace('../../', '/ALERTPOINT/');
+        }
+        
+        // Test if image loads
+        const img = new Image();
+        img.onload = function() {
+            profilePhotoElement.src = normalizedPath;
+            profilePhotoElement.classList.remove('hidden');
+            profileInitialsElement.classList.add('hidden');
+        };
+        img.onerror = function() {
+            // Image failed to load, show initials instead
+            const initials = getInitials(
+                user.first_name || user.firstname || '', 
+                user.middle_name || user.middlename || '', 
+                user.last_name || user.lastname || ''
+            );
+            profileInitialsElement.querySelector('span').textContent = initials;
+            profilePhotoElement.classList.add('hidden');
+            profileInitialsElement.classList.remove('hidden');
+        };
+        img.src = normalizedPath;
+    } else {
+        // No picture, show initials
+        const initials = getInitials(
+            user.first_name || user.firstname || '', 
+            user.middle_name || user.middlename || '', 
+            user.last_name || user.lastname || ''
+        );
+        profileInitialsElement.querySelector('span').textContent = initials;
+        profilePhotoElement.classList.add('hidden');
+        profileInitialsElement.classList.remove('hidden');
+    }
+
+    // Handle Birthdate - try multiple field names
+    const birthdateField = user.birthdate || user.birth_date || user.date_of_birth || user.dob;
+    if (birthdateField && birthdateField !== '0000-00-00' && birthdateField !== '0000-00-00 00:00:00') {
+        try {
+            const birthDate = new Date(birthdateField);
+            if (!isNaN(birthDate.getTime())) {
+                const formattedDate = birthDate.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                document.getElementById('profileBirthdate').textContent = formattedDate;
+            } else {
+                document.getElementById('profileBirthdate').textContent = '-';
+            }
+        } catch (e) {
+            console.log('Error parsing birthdate:', e);
+            document.getElementById('profileBirthdate').textContent = '-';
+        }
+    } else {
+        document.getElementById('profileBirthdate').textContent = '-';
+    }
+
+    // Handle Account Status - try multiple field names
+    const accountStatus = user.account_status || user.status || user.active_status || 'unknown';
+    const accountStatusDot = document.getElementById('profileAccountStatusDot');
+    document.getElementById('profileAccountStatus').textContent = accountStatus.charAt(0).toUpperCase() + accountStatus.slice(1);
+    
+    accountStatusDot.className = 'w-2 h-2 rounded-full ';
+    if (accountStatus === 'active' || accountStatus === '1' || accountStatus === 1) {
+        accountStatusDot.className += 'bg-green-500';
+    } else if (accountStatus === 'inactive' || accountStatus === '0' || accountStatus === 0) {
+        accountStatusDot.className += 'bg-red-500';
+    } else if (accountStatus === 'suspended') {
+        accountStatusDot.className += 'bg-orange-500';
+    } else {
+        accountStatusDot.className += 'bg-gray-500';
+    }
+
+    // Handle User Status - try multiple field names
+    const userStatus = user.user_status || user.online_status || user.login_status || 'unknown';
+    const userStatusDot = document.getElementById('profileUserStatusDot');
+    document.getElementById('profileUserStatus').textContent = userStatus.charAt(0).toUpperCase() + userStatus.slice(1);
+    
+    userStatusDot.className = 'w-2 h-2 rounded-full ';
+    if (userStatus === 'online' || userStatus === '1' || userStatus === 1) {
+        userStatusDot.className += 'bg-green-500';
+    } else if (userStatus === 'offline' || userStatus === '0' || userStatus === 0) {
+        userStatusDot.className += 'bg-red-500';
+    } else {
+        userStatusDot.className += 'bg-yellow-500';
+    }
+
+    // Handle Account Created - try multiple field names
+    const accountCreatedField = user.account_created || user.created_at || user.date_created || user.registration_date;
+    if (accountCreatedField) {
+        try {
+            const createdDate = new Date(accountCreatedField);
+            if (!isNaN(createdDate.getTime())) {
+                const formattedCreatedDate = createdDate.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                }) + ' • ' + createdDate.toLocaleTimeString('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                });
+                document.getElementById('profileAccountCreated').textContent = formattedCreatedDate;
+            } else {
+                document.getElementById('profileAccountCreated').textContent = '-';
+            }
+        } catch (e) {
+            console.log('Error parsing account created date:', e);
+            document.getElementById('profileAccountCreated').textContent = '-';
+        }
+    } else {
+        document.getElementById('profileAccountCreated').textContent = '-';
+    }
+
+    // Handle Last Active - try multiple field names
+    const lastActiveField = user.last_active || user.last_login || user.last_seen || user.last_activity;
+    if (lastActiveField && lastActiveField !== '0000-00-00 00:00:00' && lastActiveField !== '0000-00-00') {
+        try {
+            const lastActiveDate = new Date(lastActiveField);
+            if (!isNaN(lastActiveDate.getTime())) {
+                const formattedLastActive = lastActiveDate.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                }) + ' • ' + lastActiveDate.toLocaleTimeString('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                });
+                document.getElementById('profileLastActive').textContent = formattedLastActive;
+            } else {
+                document.getElementById('profileLastActive').textContent = 'Never';
+            }
+        } catch (e) {
+            console.log('Error parsing last active date:', e);
+            document.getElementById('profileLastActive').textContent = 'Never';
+        }
+    } else {
+        document.getElementById('profileLastActive').textContent = 'Never';
+    }
+}
+
+// Helper Functions
+function getFullName(firstName, middleName = '', lastName = '') {
+    let fullName = firstName || '';
+    if (middleName && middleName.trim() !== '') {
+        fullName += ' ' + middleName;
+    }
+    if (lastName && lastName.trim() !== '') {
+        fullName += ' ' + lastName;
+    }
+    return fullName.trim() || '-';
+}
+
+function getInitials(firstName, middleName = '', lastName = '') {
+    let initials = '';
+    
+    // Always get first initial from first name
+    if (firstName && firstName.trim() !== '') {
+        initials += firstName.charAt(0).toUpperCase();
+    }
+    
+    // Get second initial from middle name if available, otherwise from last name
+    if (middleName && middleName.trim() !== '') {
+        initials += middleName.charAt(0).toUpperCase();
+    } else if (lastName && lastName.trim() !== '') {
+        initials += lastName.charAt(0).toUpperCase();
+    }
+    
+    return initials || '??';
+}
+
+// Close modal when clicking outside
+document.addEventListener('DOMContentLoaded', function() {
+    const profileModal = document.getElementById('profileModal');
+    if (profileModal) {
+        profileModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeProfileModal();
+            }
+        });
+    }
+});
+</script>
 
 
     <script>

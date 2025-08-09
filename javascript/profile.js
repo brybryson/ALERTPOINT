@@ -1,9 +1,7 @@
-
-
-
-
-// Profile Modal Functions
+// Debug version - Profile Modal Functions
 function openProfileModal() {
+    console.log('Opening profile modal...');
+    
     // Close settings dropdown first
     const dropdown = document.getElementById('settingsDropdown');
     if (dropdown && !dropdown.classList.contains('pointer-events-none')) {
@@ -23,6 +21,8 @@ function closeProfileModal() {
 }
 
 async function fetchCurrentUserProfile() {
+    console.log('Fetching current user profile...');
+    
     try {
         const response = await fetch('/ALERTPOINT/javascript/LOGIN/get_current_user.php', {
             method: 'GET',
@@ -31,71 +31,168 @@ async function fetchCurrentUserProfile() {
             }
         });
 
+        console.log('Response status:', response.status);
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
+        console.log('Response data:', data);
         
         if (data.success) {
+            console.log('User data received:', data.user);
             populateProfileModal(data.user);
         } else {
             console.error('Error fetching user profile:', data.message);
-            alert('Error loading profile data. Please try again.');
+            alert('Error loading profile data: ' + data.message);
         }
         
     } catch (error) {
         console.error('Error fetching user profile:', error);
-        alert('Error connecting to server. Please try again.');
+        alert('Error connecting to server: ' + error.message);
     }
 }
 
 function populateProfileModal(user) {
-    document.getElementById('profileAdminId').textContent = user.admin_id || '-';
-    document.getElementById('profileFirstName').textContent = user.first_name || '-';
-    document.getElementById('profileMiddleName').textContent = user.middle_name || '-';
-    document.getElementById('profileLastName').textContent = user.last_name || '-';
-    document.getElementById('profileEmail').textContent = user.user_email || '-';
-    document.getElementById('profileUsername').textContent = user.username || '-';
-    document.getElementById('profilePosition').textContent = user.barangay_position || '-';
-    document.getElementById('profileRole').textContent = user.role || '-';
+    console.log('Populating profile modal with user:', user);
+    
+    // Check if elements exist
+    const elements = [
+        'profilePhoto', 'profileInitials', 'profileFullName', 'profilePosition',
+        'profileAdminId', 'profileFirstName', 'profileMiddleName', 'profileLastName',
+        'profileEmail', 'profileUsername', 'profileRole', 'profileBirthdate',
+        'profileAccountStatus', 'profileAccountStatusDot', 'profileUserStatus', 
+        'profileUserStatusDot', 'profileAccountCreated', 'profileLastActive'
+    ];
+    
+    elements.forEach(id => {
+        const element = document.getElementById(id);
+        if (!element) {
+            console.error(`Element with id '${id}' not found!`);
+        } else {
+            console.log(`Element '${id}' found`);
+        }
+    });
 
+    // Basic Information
+    const profileAdminId = document.getElementById('profileAdminId');
+    if (profileAdminId) {
+        profileAdminId.textContent = user.admin_id || '-';
+        console.log('Set profileAdminId to:', user.admin_id);
+    }
+    
+    const profileFirstName = document.getElementById('profileFirstName');
+    if (profileFirstName) {
+        profileFirstName.textContent = user.first_name || '-';
+        console.log('Set profileFirstName to:', user.first_name);
+    }
+    
+    const profileMiddleName = document.getElementById('profileMiddleName');
+    if (profileMiddleName) {
+        profileMiddleName.textContent = user.middle_name || '-';
+        console.log('Set profileMiddleName to:', user.middle_name);
+    }
+    
+    const profileLastName = document.getElementById('profileLastName');
+    if (profileLastName) {
+        profileLastName.textContent = user.last_name || '-';
+        console.log('Set profileLastName to:', user.last_name);
+    }
+    
+    const profileEmail = document.getElementById('profileEmail');
+    if (profileEmail) {
+        profileEmail.textContent = user.user_email || '-';
+        console.log('Set profileEmail to:', user.user_email);
+    }
+    
+    const profileUsername = document.getElementById('profileUsername');
+    if (profileUsername) {
+        profileUsername.textContent = user.username || '-';
+        console.log('Set profileUsername to:', user.username);
+    }
+    
+    const profilePosition = document.getElementById('profilePosition');
+    if (profilePosition) {
+        profilePosition.textContent = user.barangay_position || '-';
+        console.log('Set profilePosition to:', user.barangay_position);
+    }
+    
+    const profileRole = document.getElementById('profileRole');
+    if (profileRole) {
+        profileRole.textContent = user.role || '-';
+        console.log('Set profileRole to:', user.role);
+    }
+
+    // Full Name Construction
     const fullName = getFullName(user.first_name, user.middle_name, user.last_name);
-    document.getElementById('profileFullName').textContent = fullName;
+    const profileFullName = document.getElementById('profileFullName');
+    if (profileFullName) {
+        profileFullName.textContent = fullName;
+        console.log('Set profileFullName to:', fullName);
+    }
 
-    // Handle profile photo
+    // Handle Profile Photo
     const profilePhotoElement = document.getElementById('profilePhoto');
     const profileInitialsElement = document.getElementById('profileInitials');
     
+    console.log('Original picture path:', user.picture);
+    
     if (user.picture && user.picture !== 'NULL' && user.picture.trim() !== '') {
-        const normalizedPath = normalizePicturePath(user.picture);
-        profilePhotoElement.src = normalizedPath;
-        profilePhotoElement.classList.remove('hidden');
-        profileInitialsElement.classList.add('hidden');
+        // Convert ../../ to /ALERTPOINT/
+        let normalizedPath = user.picture;
+        if (normalizedPath.startsWith('../../')) {
+            normalizedPath = normalizedPath.replace('../../', '/ALERTPOINT/');
+        }
+        console.log('Normalized picture path:', normalizedPath);
+        
+        if (profilePhotoElement) {
+            profilePhotoElement.src = normalizedPath;
+            profilePhotoElement.classList.remove('hidden');
+            console.log('Showing profile photo');
+        }
+        if (profileInitialsElement) {
+            profileInitialsElement.classList.add('hidden');
+        }
     } else {
+        console.log('No picture found, showing initials');
         const initials = getInitials(user.first_name, user.middle_name, user.last_name);
-        profileInitialsElement.querySelector('span').textContent = initials;
-        profilePhotoElement.classList.add('hidden');
-        profileInitialsElement.classList.remove('hidden');
+        console.log('Generated initials:', initials);
+        
+        if (profileInitialsElement) {
+            const initialsSpan = profileInitialsElement.querySelector('span');
+            if (initialsSpan) {
+                initialsSpan.textContent = initials;
+                console.log('Set initials to:', initials);
+            }
+            profileInitialsElement.classList.remove('hidden');
+        }
+        if (profilePhotoElement) {
+            profilePhotoElement.classList.add('hidden');
+        }
     }
 
-    // Handle birthdate - format as "Nov 27, 2003"
-    if (user.birthdate && user.birthdate !== '0000-00-00') {
+    // Handle Birthdate
+    if (user.birthdate && user.birthdate !== '0000-00-00' && user.birthdate !== '0000-00-00 00:00:00') {
         const birthDate = new Date(user.birthdate);
-        const formattedDate = birthDate.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-        document.getElementById('profileBirthdate').textContent = formattedDate;
-    } else {
-        document.getElementById('profileBirthdate').textContent = '-';
+        if (!isNaN(birthDate.getTime())) {
+            const formattedDate = birthDate.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            const profileBirthdate = document.getElementById('profileBirthdate');
+            if (profileBirthdate) {
+                profileBirthdate.textContent = formattedDate;
+                console.log('Set profileBirthdate to:', formattedDate);
+            }
+        }
     }
 
-    // Handle account status
+    // Handle Account Status
     const accountStatus = user.account_status || 'unknown';
     const accountStatusDot = document.getElementById('profileAccountStatusDot');
-    document.getElementById('profileAccountStatus').textContent = accountStatus;
+    document.getElementById('profileAccountStatus').textContent = accountStatus.charAt(0).toUpperCase() + accountStatus.slice(1);
     
     accountStatusDot.className = 'w-2 h-2 rounded-full ';
     if (accountStatus === 'active') {
@@ -108,58 +205,91 @@ function populateProfileModal(user) {
         accountStatusDot.className += 'bg-gray-500';
     }
 
-    // Handle user status
+    // Handle User Status
     const userStatus = user.user_status || 'unknown';
     const userStatusDot = document.getElementById('profileUserStatusDot');
-    document.getElementById('profileUserStatus').textContent = userStatus;
+    document.getElementById('profileUserStatus').textContent = userStatus.charAt(0).toUpperCase() + userStatus.slice(1);
     
     userStatusDot.className = 'w-2 h-2 rounded-full ';
     if (userStatus === 'online') {
         userStatusDot.className += 'bg-green-500';
     } else if (userStatus === 'offline') {
-        userStatusDot.className += 'bg-gray-500';
+        userStatusDot.className += 'bg-red-500';
     } else {
         userStatusDot.className += 'bg-yellow-500';
     }
 
-    // Handle account created - format as "Aug 2, 2025 - 8:12 PM"
+    // Handle Account Created - Format: "August 10, 2025 • 12:47 AM"
     if (user.account_created) {
         const createdDate = new Date(user.account_created);
-        const formattedCreatedDate = createdDate.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        }) + ' - ' + createdDate.toLocaleTimeString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true
-        });
-        document.getElementById('profileAccountCreated').textContent = formattedCreatedDate;
+        if (!isNaN(createdDate.getTime())) {
+            const formattedCreatedDate = createdDate.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            }) + ' • ' + createdDate.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+            document.getElementById('profileAccountCreated').textContent = formattedCreatedDate;
+        } else {
+            document.getElementById('profileAccountCreated').textContent = '-';
+        }
     } else {
         document.getElementById('profileAccountCreated').textContent = '-';
     }
 
-    // Handle last active - format as "Aug 3, 2025 - 9:33 PM"
+    // Handle Last Active - Format: "August 10, 2025 • 12:47 AM"
     if (user.last_active && user.last_active !== '0000-00-00 00:00:00') {
         const lastActiveDate = new Date(user.last_active);
-        const formattedLastActive = lastActiveDate.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        }) + ' - ' + lastActiveDate.toLocaleTimeString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true
-        });
-        document.getElementById('profileLastActive').textContent = formattedLastActive;
+        if (!isNaN(lastActiveDate.getTime())) {
+            const formattedLastActive = lastActiveDate.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            }) + ' • ' + lastActiveDate.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+            document.getElementById('profileLastActive').textContent = formattedLastActive;
+        } else {
+            document.getElementById('profileLastActive').textContent = 'Never';
+        }
     } else {
         document.getElementById('profileLastActive').textContent = 'Never';
     }
 }
 
-// Close modal when clicking outside
-document.getElementById('profileModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeProfileModal();
+// Helper Functions
+function getFullName(firstName, middleName = '', lastName = '') {
+    let fullName = firstName || '';
+    if (middleName && middleName.trim() !== '') {
+        fullName += ' ' + middleName;
     }
-});
+    if (lastName && lastName.trim() !== '') {
+        fullName += ' ' + lastName;
+    }
+    const result = fullName.trim() || '-';
+    console.log('getFullName result:', result);
+    return result;
+}
+
+function getInitials(firstName, middleName = '', lastName = '') {
+    let initials = '';
+    
+    if (firstName && firstName.trim() !== '') {
+        initials += firstName.charAt(0).toUpperCase();
+    }
+    
+    if (middleName && middleName.trim() !== '') {
+        initials += middleName.charAt(0).toUpperCase();
+    } else if (lastName && lastName.trim() !== '') {
+        initials += lastName.charAt(0).toUpperCase();
+    }
+    
+    const result = initials || '??';
+    console.log('getInitials result:', result);
+    return result;
+}
